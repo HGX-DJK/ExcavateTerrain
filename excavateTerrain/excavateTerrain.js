@@ -14,7 +14,7 @@ class excavateTerrain {
         var ellipsoid = viewer.scene.globe.ellipsoid;
         var arr = config.positions;
         var nArr = [];
-        var nArr2 = [];
+        var closeArr = [];
         arr.forEach((element) => {
             var catographic = Cesium.Cartographic.fromCartesian(element);
             //获取当前点位的高程
@@ -34,23 +34,23 @@ class excavateTerrain {
                 z: height,
             };
             nArr.push(tempObj);
-            nArr2.push(tempObj);
+            closeArr.push(tempObj);
         });
         //获取传入坐标的第一个点
         var catographic = Cesium.Cartographic.fromCartesian(arr[0]);
         var height1 = Number(catographic.height.toFixed(2));
         var lat = Cesium.Math.toDegrees(catographic.latitude);
         var lng = Cesium.Math.toDegrees(catographic.longitude);
-        nArr2.push({
+        closeArr.push({
             x: lng,
             y: lat,
             z: height1,
         });
-        //nArr未闭合的坐标串,nArr2闭合的坐标串数据
-        this.excavate(nArr, nArr2)
+        //nArr未闭合的坐标串,closeArr闭合的坐标串数据
+        this.excavate(nArr, closeArr)
     }
 
-    excavate(arr, nArr2) {
+    excavate(arr, closeArr) {
         var viewer = this.viewer;
         var config = this.config;
         var _this = this;
@@ -62,7 +62,7 @@ class excavateTerrain {
         var flag = _this.isClockWise(arr);
         if (flag === true) {
             arr.reverse();
-            nArr2.reverse();
+            closeArr.reverse();
         };
         arr.forEach((element) => {
             nar.push(element.x);
@@ -140,16 +140,16 @@ class excavateTerrain {
         var terrainSamplePositions = [];
         var length = 2048;
         var nar22 = [];
-        nArr2.forEach((element, index) => {
-            if (index < nArr2.length - 1) {
+        closeArr.forEach((element, index) => {
+            if (index < closeArr.length - 1) {
                 var startLon = Cesium.Math.toRadians(element.x);
-                var endLon   = Cesium.Math.toRadians(nArr2[index + 1].x);
+                var endLon   = Cesium.Math.toRadians(closeArr[index + 1].x);
                 var starty   = Cesium.Math.toRadians(element.y);
-                var endy     = Cesium.Math.toRadians(nArr2[index + 1].y);
+                var endy     = Cesium.Math.toRadians(closeArr[index + 1].y);
                 for (var i = 0; i < length; ++i) {
                     //获取采样的度数据
-                    var x   = Cesium.Math.lerp(element.x, nArr2[index + 1].x, i / (length - 1));
-                    var y   = Cesium.Math.lerp(element.y, nArr2[index + 1].y, i / (length - 1));
+                    var x   = Cesium.Math.lerp(element.x, closeArr[index + 1].x, i / (length - 1));
+                    var y   = Cesium.Math.lerp(element.y, closeArr[index + 1].y, i / (length - 1));
                     nar22.push(x,y);
                     //获取采样的弧度数据
                     var lon = Cesium.Math.lerp(startLon, endLon, i / (length - 1));
@@ -159,13 +159,13 @@ class excavateTerrain {
                 };
             } else {
                 var startLon = Cesium.Math.toRadians(element.x);
-                var endLon = Cesium.Math.toRadians(nArr2[0].x);
+                var endLon = Cesium.Math.toRadians(closeArr[0].x);
                 var starty = Cesium.Math.toRadians(element.y);
-                var endy = Cesium.Math.toRadians(nArr2[0].y);
+                var endy = Cesium.Math.toRadians(closeArr[0].y);
                 for (var i = 0; i < length; ++i) {
                     //获取采样的度数据
-                    var x = Cesium.Math.lerp(element.x, nArr2[0].x, i / (length - 1));
-                    var y = Cesium.Math.lerp(element.y, nArr2[0].y, i / (length - 1));
+                    var x = Cesium.Math.lerp(element.x, closeArr[0].x, i / (length - 1));
+                    var y = Cesium.Math.lerp(element.y, closeArr[0].y, i / (length - 1));
                     nar22.push(x,y);
                    //获取采样的弧度数据
                     var lon = Cesium.Math.lerp(startLon, endLon, i / (length - 1));
