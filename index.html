@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.ico" />
+    <link rel="stylesheet" href="/css/reset.css">
+    <link rel="stylesheet" href="./cesium/Widgets/widgets.css">
+    <title>地形挖掘</title>
+</head>
+<style type='text/css'>
+    html,
+    body {
+        margin: 0px;
+        height: 100%;
+        width: 100%;
+    }
+
+    .container {
+        width: 100%;
+        height: 100%;
+    }
+</style>
+<script type='text/javascript' src="./cesium/Cesium.js"></script>
+<script type='text/javascript' src="./excavateTerrain/excavateTerrain.js"></script>
+
+<body>
+    <div id="map-container" class="container"></div>
+    <script>
+        let viewer = null;
+        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZjQ5ZGUzNC1jNWYwLTQ1ZTMtYmNjYS05YTY4ZTVmN2I2MDkiLCJpZCI6MTE3MTM4LCJpYXQiOjE2NzY0NDUyODB9.ZaNSBIfc1sGLhQd_xqhiSsc0yr8oS0wt1hAo9gbke6M'
+        //初始化地图
+        initMap();
+        //初始化地图
+        async function initMap() {
+            //注册Cesium Ion令牌
+            viewer = new Cesium.Viewer("map-container", {
+                geocoder: true,              //控制地图是否显示一个地理编码（geocoding）控件，允许用户搜索地点并定位到特定位置。
+                homeButton: true,            //控制是否显示一个回到初始视图的按钮，允许用户快速返回到地图的初始状态
+                animation: true,             //控制是否显示动画控件，允许用户播放、暂停或者改变时间。
+                fullscreenButton: true,      //控制是否显示全屏按钮，允许用户切换地图进入或退出全屏模式。
+                sceneModePicker: true,       //控制是否显示场景模式选择器，允许用户在 2D、3D 和 CV（Columbus View）模式之间切换
+                timeline: true,              //控制是否显示时间轴控件，允许用户在时间上浏览数据。
+                navigationHelpButton: true,  //控制是否显示导航帮助按钮，提供关于如何使用地图导航控件的帮助信息
+                baseLayerPicker: true,       //控制是否显示基础图层选择器，允许用户选择不同的基础图层（如卫星影像、地图等）。
+                infoBox: true,               //控制是否显示信息框，当用户点击地图上的对象时，会显示与该对象相关的信息。
+                scene3DOnly: true,           //如果设置为true，则所有几何图形以3D模式绘制以节约GPU资源
+                selectionIndicator: true,    //控制是否显示选择指示器，用于指示当前选择的地图对象。
+                baselLayerPicker: true,      //控制是否显示基础图层选择器，允许用户选择不同的基础图层。
+                //添加ArcGis瓦片底图图层
+                terrainProvider: await Cesium.CesiumTerrainProvider.fromUrl("http://data.mars3d.cn/terrain", {
+                    requestVertexNormals: true,
+                    requestWaterMask: true
+                })
+            });
+            // 去除logo
+            viewer.cesiumWidget.creditContainer.style.display = "none";
+            // 显示帧率
+            viewer.scene.debugShowFramesPerSecond = true;
+            //开启或者关闭深度检测
+            viewer.scene.globe.depthTestAgainstTerrain = true;
+            // 外天空盒
+            viewer.scene.skyBox = new Cesium.SkyBox({
+                sources: {
+                    positiveX: "/images/Standard-Cube-Map/px1.png",
+                    negativeX: "/images/Standard-Cube-Map/nx1.png",
+                    positiveY: "/images/Standard-Cube-Map/pz.png",
+                    negativeY: "/images/Standard-Cube-Map/nz1.png",
+                    positiveZ: "/images/Standard-Cube-Map/py.png",
+                    negativeZ: "/images/Standard-Cube-Map/ny1.png",
+                },
+            });
+            applyRealteFun();
+
+        };
+
+        //执行某些功能
+        function applyRealteFun() {
+            setPipline3Dtitles();
+            startExcavate();
+            addClickEvent();
+        };
+
+        //添加地下管线
+        async function  setPipline3Dtitles () {
+            const url = "https://data.mars3d.cn/3dtiles/max-piping/tileset.json";
+            let tilesetJson = get3DtilesParam()
+            const tileset = await  Cesium.Cesium3DTileset.fromUrl(url,tilesetJson);
+            // 非异步加载
+            viewer.scene.primitives.add(tileset);
+            viewer.flyTo(tileset, {
+                offset: {
+                    heading: Cesium.Math.toRadians(120.0),//方向
+                    pitch: Cesium.Math.toRadians(-10),//倾斜角度
+                    range: 450
+                }
+            });
+        };
+        function  get3DtilesParam(){
+            let translation = Cesium.Cartesian3.fromArray([0, 0, 0]);
+            let m = Cesium.Matrix4.fromTranslation(translation);
+            let tilesetJson = {
+                modelMatrix: m,
+                show: true,                     // 是否显示图块集(默认true)
+                skipLevelOfDetail: true,        // --- 优化选项。确定是否应在遍历期间应用详细级别跳过(默认false)
+                baseScreenSpaceError: 1024,     // --- When skipLevelOfDetailis true，在跳过详细级别之前必须达到的屏幕空间错误(默认1024)
+                maximumScreenSpaceError: 32,    // 数值加大，能让最终成像变模糊---用于驱动细节细化级别的最大屏幕空间误差(默认16)原128
+                skipScreenSpaceErrorFactor: 16, // --- 何时skipLevelOfDetail是true，定义要跳过的最小屏幕空间错误的乘数。与 一起使用skipLevels来确定要加载哪些图块(默认16)
+                skipLevels: 1,                   // --- WhenskipLevelOfDetail是true一个常量，定义了加载图块时要跳过的最小级别数。为 0 时，不跳过任何级别。与 一起使用skipScreenSpaceErrorFactor来确定要加载哪些图块。(默认1)
+                immediatelyLoadDesiredLevelOfDetail: false, // --- 当skipLevelOfDetail是时true，只会下载满足最大屏幕空间错误的图块。忽略跳过因素，只加载所需的图块(默认false)
+                loadSiblings: false,            // 如果为true则不会在已加载完概况房屋后，自动从中心开始超清化房屋 --- 何时确定在遍历期间skipLevelOfDetail是否true始终下载可见瓦片的兄弟姐妹(默认false)
+                cullWithChildrenBounds: false,  // ---优化选项。是否使用子边界体积的并集来剔除瓦片（默认true）
+                cullRequestsWhileMoving: false, // ---优化选项。不要请求由于相机移动而在返回时可能未使用的图块。这种优化只适用于静止的瓦片集(默认true)
+                cullRequestsWhileMovingMultiplier: 10, // 值越小能够更快的剔除 ---优化选项。移动时用于剔除请求的乘数。较大的是更积极的剔除，较小的较不积极的剔除(默认60)原10
+                preloadWhenHidden: true,                    // ---tileset.show时 预加载瓷砖false。加载图块，就好像图块集可见但不渲染它们(默认false)
+                preloadFlightDestinations: true,            // ---优化选项。在相机飞行时在相机的飞行目的地预加载图块(默认true)
+                preferLeaves: true,                         // ---优化选项。最好先装载叶子(默认false)
+                maximumMemoryUsage: 2048,                   // 内存分配变小有利于倾斜摄影数据回收，提升性能体验---瓦片集可以使用的最大内存量（以 MB 为单位）(默认512)原512 4096
+                progressiveResolutionHeightFraction: 0.5,   // 数值偏于0能够让初始加载变得模糊 --- 这有助于在继续加载全分辨率图块的同时快速放下图块层(默认0.3)
+                dynamicScreenSpaceErrorDensity: 10,         // 数值加大，能让周边加载变快 --- 用于调整动态屏幕空间误差的密度，类似于雾密度(默认0.00278)
+                dynamicScreenSpaceErrorFactor: 1,           // 不知道起了什么作用没，反正放着吧先 --- 用于增加计算的动态屏幕空间误差的因素(默认4.0)
+                dynamicScreenSpaceErrorHeightFalloff: 0.25, // --- 密度开始下降的瓦片集高度的比率(默认0.25)
+                foveatedScreenSpaceError: true,             // --- 优化选项。通过暂时提高屏幕边缘周围图块的屏幕空间错误，优先加载屏幕中心的图块。一旦Cesium3DTileset#foveatedConeSize加载确定的屏幕中心的所有图块，屏幕空间错误就会恢复正常。(默认true)
+                foveatedConeSize: 0.1,                      // --- 优化选项。当Cesium3DTileset#foveatedScreenSpaceError为 true 时使用来控制决定延迟哪些图块的锥体大小。立即加载此圆锥内的瓷砖。圆锥外的瓷砖可能会根据它们在圆锥外的距离及其屏幕空间误差而延迟。这是由Cesium3DTileset#foveatedInterpolationCallback和控制的Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation。将此设置为 0.0 意味着圆锥将是由相机位置及其视图方向形成的线。将此设置为 1.0 意味着锥体包含相机的整个视野,禁用效果(默认0.1)
+                foveatedMinimumScreenSpaceErrorRelaxation: 0.0, // --- 优化选项。当Cesium3DTileset#foveatedScreenSpaceError为 true 时使用以控制中央凹锥之外的图块的起始屏幕空间误差松弛。屏幕空间错误将从 tileset 值开始Cesium3DTileset#maximumScreenSpaceError根据提供的Cesium3DTileset#foveatedInterpolationCallback.(默认0.0)
+                // foveatedTimeDelay: 0.2,              // ---优化选项。使用 whenCesium3DTileset#foveatedScreenSpaceError为 true 来控制在相机停止移动后延迟瓷砖开始加载之前等待的时间（以秒为单位）。此时间延迟可防止在相机移动时请求屏幕边缘周围的瓷砖。将此设置为 0.0 将立即请求任何给定视图中的所有图块。(默认0.2)
+                luminanceAtZenith: 0.2,                 // --- 用于此模型的程序环境贴图的天顶处的太阳亮度（以千坎德拉每平方米为单位）(默认0.2)
+                backFaceCulling: true,                  // --- 是否剔除背面几何体。当为 true 时，背面剔除由 glTF 材质的 doubleSided 属性确定；如果为 false，则禁用背面剔除(默认true)
+                debugFreezeFrame: false,                // --- 仅用于调试。确定是否应仅使用最后一帧的图块进行渲染(默认false)
+                debugColorizeTiles: false,              // --- 仅用于调试。如果为 true，则为每个图块分配随机颜色(默认false)
+                debugWireframe: false,                  // --- 仅用于调试。如果为 true，则将每个图块的内容渲染为线框(默认false)
+                debugShowBoundingVolume: false,         // --- 仅用于调试。如果为 true，则为每个图块渲染边界体积(默认false)
+                debugShowContentBoundingVolume: false,  // --- 仅用于调试。如果为 true，则为每个图块的内容渲染边界体积(默认false)
+                debugShowViewerRequestVolume: false,    // --- 仅用于调试。如果为 true，则呈现每个图块的查看器请求量(默认false)
+                debugShowGeometricError: false,         // --- 仅用于调试。如果为 true，则绘制标签以指示每个图块的几何误差(默认false)
+                debugShowRenderingStatistics: false,    // --- 仅用于调试。如果为 true，则绘制标签以指示每个图块的命令、点、三角形和特征的数量(默认false)
+                debugShowMemoryUsage: false,            // --- 仅用于调试。如果为 true，则绘制标签以指示每个图块使用的纹理和几何内存（以兆字节为单位）(默认false)
+                debugShowUrl: false,                    // --- 仅用于调试。如果为 true，则绘制标签以指示每个图块的 url(默认false)
+                dynamicScreenSpaceError: true,          // 根据测试，有了这个后，会在真正的全屏加载完之后才清晰化房屋 --- 优化选项。减少距离相机较远的图块的屏幕空间错误(默认false)
+            };
+
+            return tilesetJson;
+        }
+        //设置地图视角
+        function setMapView() {
+            //获取三维场景相机
+            var camera = viewer.camera;
+            //相机设置视角及高度
+            camera.setView({
+                destination: Cesium.Cartesian3.fromDegrees(117.17053438320917, 34.25889545304317, 400),
+                orientation: {
+                    heading: Cesium.Math.toRadians(-50),
+                    pitch: Cesium.Math.toRadians(-90),
+                    roll: Cesium.Math.toRadians(0)
+                }
+            });
+        };
+        //地形开挖
+        function startExcavate() {
+            var mr = [{
+                x: -2480330.5908522676,
+                y: 4822510.529185927,
+                z: 3346119.652831883
+            },
+            {
+                x: -2480439.9919095673,
+                y: 4823170.43389737,
+                z: 3345093.9799242946
+            },
+            {
+                x: -2479549.2888309453,
+                y: 4823140.652101073,
+                z: 3345793.186635206
+            },
+            {
+                x: -2479637.60667116,
+                y: 4822713.152212157,
+                z: 3346340.968452223
+            }
+            ];
+            new excavateTerrain(viewer, {
+                positions: mr,
+                height: 30,
+                bottom: "./images/excavate/excavationregion_side.jpg",
+                side: "./images/excavate/excavationregion_top.jpg",
+            })
+        }
+
+        //添加地图的点击事件
+        function addClickEvent() {
+            const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+            // 单击事件监听
+            handler.setInputAction(function (click) {
+                // 获取屏幕坐标
+                const pickedPosition = viewer.scene.pickPosition(click.position);
+                if (Cesium.defined(pickedPosition)) {
+                    console.log("点击位置的笛卡尔坐标：", pickedPosition);
+                    // 转为地理坐标（经纬度+高程）
+                    const cartographic = Cesium.Cartographic.fromCartesian(pickedPosition);
+                    const lon = Cesium.Math.toDegrees(cartographic.longitude);
+                    const lat = Cesium.Math.toDegrees(cartographic.latitude);
+                    const height = cartographic.height;
+                    console.log(`经度: ${lon}, 纬度: ${lat}, 高度: ${height}`);
+                };
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        }
+
+    </script>
+</body>
+
+</html>
