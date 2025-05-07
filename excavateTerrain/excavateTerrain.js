@@ -46,6 +46,7 @@ class excavateTerrain {
             y: lat,
             z: height1,
         });
+        //nArr未闭合的坐标串,nArr2闭合的坐标串数据
         this.excavate(nArr, nArr2)
     }
 
@@ -57,11 +58,12 @@ class excavateTerrain {
         var nar = [];
         //存储高度数据
         var hhh = [];
+        //此处用于判断是否是顺时针
         var flag = _this.isClockWise(arr);
         if (flag === true) {
             arr.reverse();
             nArr2.reverse();
-        }
+        };
         arr.forEach((element) => {
             nar.push(element.x);
             nar.push(element.y);
@@ -120,7 +122,7 @@ class excavateTerrain {
         hhh.sort((a,b)=>a-b);
         //添加地面的贴图
         viewer.entities.add({
-            id: "entityDM",
+            id: "entityWallBottom",
             polygon: {
                 hierarchy: Cesium.Cartesian3.fromDegreesArray(nar),
                 material: new Cesium.ImageMaterialProperty({
@@ -145,14 +147,15 @@ class excavateTerrain {
                 var starty   = Cesium.Math.toRadians(element.y);
                 var endy     = Cesium.Math.toRadians(nArr2[index + 1].y);
                 for (var i = 0; i < length; ++i) {
+                    //获取采样的度数据
                     var x   = Cesium.Math.lerp(element.x, nArr2[index + 1].x, i / (length - 1));
                     var y   = Cesium.Math.lerp(element.y, nArr2[index + 1].y, i / (length - 1));
+                    nar22.push(x,y);
+                    //获取采样的弧度数据
                     var lon = Cesium.Math.lerp(startLon, endLon, i / (length - 1));
                     var lat = Cesium.Math.lerp(starty, endy, i / (length - 1));
                     var position = new Cesium.Cartographic(lon, lat);
                     terrainSamplePositions.push(position);
-                    nar22.push(x)
-                    nar22.push(y)
                 };
             } else {
                 var startLon = Cesium.Math.toRadians(element.x);
@@ -160,15 +163,15 @@ class excavateTerrain {
                 var starty = Cesium.Math.toRadians(element.y);
                 var endy = Cesium.Math.toRadians(nArr2[0].y);
                 for (var i = 0; i < length; ++i) {
+                    //获取采样的度数据
                     var x = Cesium.Math.lerp(element.x, nArr2[0].x, i / (length - 1));
                     var y = Cesium.Math.lerp(element.y, nArr2[0].y, i / (length - 1));
-
+                    nar22.push(x,y);
+                   //获取采样的弧度数据
                     var lon = Cesium.Math.lerp(startLon, endLon, i / (length - 1));
                     var lat = Cesium.Math.lerp(starty, endy, i / (length - 1));
                     var position = new Cesium.Cartographic(lon, lat);
-                    terrainSamplePositions.push(position);
-                    nar22.push(x)
-                    nar22.push(y)
+                    terrainSamplePositions.push(position); 
                 };
             }
         });
@@ -183,7 +186,7 @@ class excavateTerrain {
                 };
                 //添加四周边界面
                 viewer.entities.add({
-                    id: "entityDMBJ",
+                    id: "entityWallSide",
                     wall: {
                         positions: Cesium.Cartesian3.fromDegreesArray(nar22),
                         maximumHeights: maximumHeightsARR,
@@ -196,12 +199,13 @@ class excavateTerrain {
                 });
             })
         } else {
+            //此处用于处理没有添加高程的
             for (let index = 0; index < terrainSamplePositions.length; index++) {
                 maximumHeightsARR.push( 0 );
                 minimumHeights.push(hhh[0] - config.height);
             }
             viewer.entities.add({
-                id: "entityDMBJ",
+                id: "entityWallSide",
                 wall: {
                     positions: Cesium.Cartesian3.fromDegreesArray(nar22),
                     maximumHeights: maximumHeightsARR,
@@ -219,8 +223,8 @@ class excavateTerrain {
      */
     removeEntity(){
         try {
-            viewer.entities.removeById("entityDM");
-            viewer.entities.removeById("entityDMBJ");
+            viewer.entities.removeById("entityWallBottom");
+            viewer.entities.removeById("entityWallSide");
         } catch (error) { 
             console.log(error);
         };
