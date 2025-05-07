@@ -9,22 +9,15 @@ class excavateTerrain {
      * @description 开始地形挖掘分析
      */
     analysis() {
-        var viewer = this.viewer;
         var config = this.config;
-        var ellipsoid = viewer.scene.globe.ellipsoid;
         var arr = config.positions;
         var nArr = [];
         var closeArr = [];
         arr.forEach((element) => {
-            var catographic = Cesium.Cartographic.fromCartesian(element);
-            //获取当前点位的高程
-            var height = Number(catographic.height.toFixed(2));
             //笛卡尔坐标系转弧度
-            var cartographic = ellipsoid.cartesianToCartographic({
-                x: element.x,
-                y: element.y,
-                z: element.z,
-            });
+            var cartographic = Cesium.Cartographic.fromCartesian(element);
+            //获取当前点位的高程
+            var height = Number(cartographic.height.toFixed(2));
             //获取当前点位经纬度
             var lat = Cesium.Math.toDegrees(cartographic.latitude);
             var lng = Cesium.Math.toDegrees(cartographic.longitude);
