@@ -132,7 +132,7 @@ class excavateTerrain {
         //获取采样的数组
         var terrainSamplePositions = [];
         var length = 2048;
-        var nar22 = [];
+        var wallDegreeList = [];
         closeArr.forEach((element, index) => {
             var startLon = Cesium.Math.toRadians(element.x);
             var startLat = Cesium.Math.toRadians(element.y);
@@ -143,7 +143,7 @@ class excavateTerrain {
                     //获取采样的度数据
                     var x   = Cesium.Math.lerp(element.x, closeArr[index + 1].x, i / (length - 1));
                     var y   = Cesium.Math.lerp(element.y, closeArr[index + 1].y, i / (length - 1));
-                    nar22.push(x,y);
+                    wallDegreeList.push(x,y);
                     //获取采样的弧度数据
                     var lon = Cesium.Math.lerp(startLon, endLon, i / (length - 1));
                     var lat = Cesium.Math.lerp(startLat, endLat, i / (length - 1));
@@ -157,7 +157,7 @@ class excavateTerrain {
                     //获取采样的度数据
                     var x = Cesium.Math.lerp(element.x, closeArr[0].x, i / (length - 1));
                     var y = Cesium.Math.lerp(element.y, closeArr[0].y, i / (length - 1));
-                    nar22.push(x,y);
+                    wallDegreeList.push(x,y);
                    //获取采样的弧度数据
                     var lon = Cesium.Math.lerp(startLon, endLon, i / (length - 1));
                     var lat = Cesium.Math.lerp(startLat, endLat, i / (length - 1));
@@ -179,7 +179,7 @@ class excavateTerrain {
                 viewer.entities.add({
                     id: "entityWallSide",
                     wall: {
-                        positions: Cesium.Cartesian3.fromDegreesArray(nar22),
+                        positions: Cesium.Cartesian3.fromDegreesArray(wallDegreeList),
                         maximumHeights: maximumHeightsARR,
                         minimumHeights: minimumHeights,
                         material: new Cesium.ImageMaterialProperty({
@@ -198,7 +198,7 @@ class excavateTerrain {
             viewer.entities.add({
                 id: "entityWallSide",
                 wall: {
-                    positions: Cesium.Cartesian3.fromDegreesArray(nar22),
+                    positions: Cesium.Cartesian3.fromDegreesArray(wallDegreeList),
                     maximumHeights: maximumHeightsARR,
                     minimumHeights: minimumHeights,
                     material: new Cesium.ImageMaterialProperty({
