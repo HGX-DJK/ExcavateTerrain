@@ -50,7 +50,7 @@ class excavateTerrain {
         //存储经纬度坐标
         var nar = [];
         //存储高度数据
-        var hhh = [];
+        var heightList = [];
         //此处用于判断是否是顺时针
         var flag = _this.isClockWise(arr);
         if (flag === true) {
@@ -60,7 +60,7 @@ class excavateTerrain {
         arr.forEach((element) => {
             nar.push(element.x);
             nar.push(element.y);
-            hhh.push(element.z);
+            heightList.push(element.z);
         });
         var points = [];
         arr.forEach((element) => {
@@ -112,7 +112,7 @@ class excavateTerrain {
         });
         this.removeEntity();
         //高程按照从小到大排序
-        hhh.sort((a,b)=>a-b);
+        heightList.sort((a,b)=>a-b);
         //添加地面的贴图
         viewer.entities.add({
             id: "entityWallBottom",
@@ -123,7 +123,7 @@ class excavateTerrain {
                     color: new Cesium.Color.fromCssColorString("#cbc6c2"),
                     repeat: new Cesium.Cartesian2(30, 30),
                 }),
-                height: hhh[0] - config.height,
+                height: heightList[0] - config.height,
             },
         });
 
@@ -135,10 +135,10 @@ class excavateTerrain {
         var nar22 = [];
         closeArr.forEach((element, index) => {
             var startLon = Cesium.Math.toRadians(element.x);
-            var startLat   = Cesium.Math.toRadians(element.y);
+            var startLat = Cesium.Math.toRadians(element.y);
             if (index < closeArr.length - 1) {
-                var endLon   = Cesium.Math.toRadians(closeArr[index + 1].x);
-                var endLat     = Cesium.Math.toRadians(closeArr[index + 1].y);
+                var endLon = Cesium.Math.toRadians(closeArr[index + 1].x);
+                var endLat = Cesium.Math.toRadians(closeArr[index + 1].y);
                 for (var i = 0; i < length; ++i) {
                     //获取采样的度数据
                     var x   = Cesium.Math.lerp(element.x, closeArr[index + 1].x, i / (length - 1));
@@ -173,7 +173,7 @@ class excavateTerrain {
                 samples = samples[0]
                 for (let index = 0; index < samples.length; index++) {
                     maximumHeightsARR.push(samples[index].height);
-                    minimumHeights.push(hhh[0] - config.height);
+                    minimumHeights.push(heightList[0] - config.height);
                 };
                 //添加四周边界面
                 viewer.entities.add({
@@ -193,7 +193,7 @@ class excavateTerrain {
             //此处用于处理没有添加高程的
             for (let index = 0; index < terrainSamplePositions.length; index++) {
                 maximumHeightsARR.push( 0 );
-                minimumHeights.push(hhh[0] - config.height);
+                minimumHeights.push(heightList[0] - config.height);
             }
             viewer.entities.add({
                 id: "entityWallSide",
