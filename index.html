@@ -79,6 +79,12 @@
             //开启或者关闭深度检测
             viewer.scene.globe.depthTestAgainstTerrain = true;
             // 外天空盒
+            setSkyBox();
+            applyRealteFun();
+        };
+
+        //设置天空盒
+        function setSkyBox() {
             viewer.scene.skyBox = new Cesium.SkyBox({
                 sources: {
                     positiveX: "/images/Standard-Cube-Map/px1.png",
@@ -87,9 +93,8 @@
                     negativeY: "/images/Standard-Cube-Map/nz1.png",
                     positiveZ: "/images/Standard-Cube-Map/py.png",
                     negativeZ: "/images/Standard-Cube-Map/ny1.png",
-                },
-            });
-            applyRealteFun();
+                }
+            })
         };
 
         //执行某些功能
@@ -166,17 +171,16 @@
         //地形开挖
         function startExcavate() {
             resetParamsSet();
-            var cartesianList = [
-                { x: -2480330.5908522676, y: 4822510.529185927, z: 3346119.652831883 },
+            var cartesianList = [{ x: -2480330.5908522676, y: 4822510.529185927, z: 3346119.652831883 },
                 { x: -2480439.9919095673, y: 4823170.43389737,  z: 3345093.9799242946 },
                 { x: -2479549.2888309453, y: 4823140.652101073, z: 3345793.186635206 },
-                { x: -2479637.60667116,   y: 4822713.152212157, z: 3346340.968452223 }
-            ];
+                { x: -2479637.60667116,   y: 4822713.152212157, z: 3346340.968452223 }];
+            
             terrainExcavateInstance = new excavateTerrain(viewer, {
                 positions: cartesianList,
                 height: 30,
                 bottom: "./images/excavate/excavationregion_side.jpg",
-                side: "./images/excavate/excavationregion_top.jpg",
+                side:   "./images/excavate/excavationregion_top.jpg",
             })
         };
 
