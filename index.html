@@ -6,6 +6,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.ico" />
     <link rel="stylesheet" href="/css/reset.css">
     <link rel="stylesheet" href="./cesium/Widgets/widgets.css">
+    <link rel="stylesheet" href="./navigate/cesium-navigation.css">
     <title>地形挖掘</title>
 </head>
 <style type='text/css'>
@@ -37,6 +38,7 @@
     }
 </style>
 <script type='text/javascript' src="./cesium/Cesium.js"></script>
+<script type='text/javascript' src="./navigate/CesiumNavigation.umd.js"></script>
 <script type='text/javascript' src="./excavateTerrain/excavateTerrain.js"></script>
 
 <body>
@@ -50,7 +52,6 @@
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ZjQ5ZGUzNC1jNWYwLTQ1ZTMtYmNjYS05YTY4ZTVmN2I2MDkiLCJpZCI6MTE3MTM4LCJpYXQiOjE2NzY0NDUyODB9.ZaNSBIfc1sGLhQd_xqhiSsc0yr8oS0wt1hAo9gbke6M'
         //初始化地图
         initMap();
-        //初始化地图
         async function initMap() {
             //注册Cesium Ion令牌
             viewer = new Cesium.Viewer("map-container", {
@@ -80,9 +81,35 @@
             viewer.scene.globe.depthTestAgainstTerrain = true;
             // 外天空盒
             setSkyBox();
+            addNavigateTools();
             applyRealteFun();
         };
 
+        //添加指北针相关
+        function addNavigateTools(){
+            var options = {};
+            // 用于在使用重置导航重置地图视图时设置默认视图控制。接受的值是Cesium.Cartographic 和 Cesium.Rectangle.
+            options.defaultResetView = Cesium.Rectangle.fromDegrees(80, 22, 130, 50);
+            // 用于启用或禁用罗盘。true是启用罗盘，false是禁用罗盘。默认值为true。如果将选项设置为false，则罗盘将不会添加到地图中。
+            options.enableCompass = true;
+            // 用于启用或禁用缩放控件。true是启用，false是禁用。默认值为true。如果将选项设置为false，则缩放控件将不会添加到地图中。
+            options.enableZoomControls = true;
+            // 用于启用或禁用距离图例。true是启用，false是禁用。默认值为true。如果将选项设置为false，距离图例将不会添加到地图中。
+            options.enableDistanceLegend = true;
+            // 用于启用或禁用指南针外环。true是启用，false是禁用。默认值为true。如果将选项设置为false，则该环将可见但无效。
+            options.enableCompassOuterRing = true;
+            //自定义任意位置指南针和放大缩小控件
+            options.compassPosition = {
+                bottom:"12rem",
+                right:"0rem"
+            };
+            options.zoomPosition = {
+                bottom:"4rem",
+                right:"1.5rem"
+            };
+
+            CesiumNavigation.umd(viewer, options);
+        }
         //设置天空盒
         function setSkyBox() {
             viewer.scene.skyBox = new Cesium.SkyBox({
