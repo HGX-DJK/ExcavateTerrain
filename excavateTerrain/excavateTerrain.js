@@ -44,6 +44,7 @@ class excavateTerrain {
     }
 
     excavate(arr, closeArr) {
+        this.removeEntity();
         var viewer = this.viewer;
         var config = this.config;
         var _this = this;
@@ -110,7 +111,6 @@ class excavateTerrain {
             edgeWidth: 1.0,
             edgeColor: Cesium.Color.OLIVE,
         });
-        this.removeEntity();
         //高程按照从小到大排序
         heightList.sort((a,b)=>a-b);
         //添加地面的贴图
@@ -219,6 +219,10 @@ class excavateTerrain {
         } catch (error) { 
             console.log(error);
         };
+        if (viewer.scene.globe.clippingPlanes) {
+            viewer.scene.globe.clippingPlanes.destroy();
+            viewer.scene.globe.clippingPlanes = null;
+        }
     }
     /**
      * @description 判断是否是顺时针
