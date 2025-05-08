@@ -44,7 +44,7 @@ class excavateTerrain {
     }
 
     excavate(arr, closeArr) {
-        this.removeEntity();
+        this.destoryEntity();
         var viewer = this.viewer;
         var config = this.config;
         var _this = this;
@@ -212,7 +212,7 @@ class excavateTerrain {
     /**
      * @description 移除添加的实体面数据
      */
-    removeEntity(){
+    destoryEntity(){
         try {
             viewer.entities.removeById("entityWallBottom");
             viewer.entities.removeById("entityWallSide");
