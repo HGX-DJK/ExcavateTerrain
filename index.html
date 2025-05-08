@@ -183,24 +183,27 @@
         //设置地表透明度
         function setTerrainOpacity(){
             resetParamsSet();
-            // 启用地形透明
-            viewer.scene.globe.translucency.enabled = true;
-            // 设置地表透明度
-            viewer.scene.globe.translucency.frontFaceAlpha = 0.3; // 前面看的时候的透明度
-            viewer.scene.globe.translucency.backFaceAlpha = 0.3;  // 背面看的时候的透明度
+            setOpacityParmas(0.3);
         };
+
+        //设置透明参数
+        function setOpacityParmas(value){
+            let flag  = true;
+            if(value == 1) flag = false;
+            // 启用地形透明
+            viewer.scene.globe.translucency.enabled = flag;
+            // 设置地表透明度
+            viewer.scene.globe.translucency.frontFaceAlpha = value; // 前面看的时候的透明度
+            viewer.scene.globe.translucency.backFaceAlpha  = value;  // 背面看的时候的透明度
+        }
 
         //重置参数
         function resetParamsSet(){
-            viewer.scene.globe.translucency.enabled = false;
-            viewer.scene.globe.translucency.frontFaceAlpha = 1; 
-            viewer.scene.globe.translucency.backFaceAlpha = 1;
-
+            setOpacityParmas(1);
             //移除开挖添加的实体
             terrainExcavateInstance && terrainExcavateInstance.removeEntity();
-
             setMapView();
-        }
+        };
 
         //添加地图的点击事件
         function addClickEvent() {
